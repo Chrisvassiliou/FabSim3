@@ -50,7 +50,7 @@ default:
   # This variable encodes the default location for templates.
   local_templates_path: ["$localroot/deploy/templates"]
   stat: qstat
-  cancel_job_command: "qdel"
+  ancel_job_command: "qdel"
   lammps_args: ""
   # This variable encodes the default location for blackbox scripts.
   local_blackbox_path: ["$localroot/blackbox"]
@@ -292,4 +292,16 @@ qcg:
   # cancel_job_command : cancel submitted task based on input $jobID 
   # the $jobID variable will be set during the execution, keep the format as '$jobID' in the parameters list
   cancel_job_command: 'qcg-cancel $jobID'
-      
+
+genji:
+  # This is a fake remote address 
+  remote: "genji_cluster.fr"
+  job_dispatch: "sbatch"      
+  home_path_template: "/home_nfs_robin_ib/$username/$project"
+  runtime_path_template: "/home_nfs_robin_ib/$username/$project"
+  port: 8522
+  batch_header: slurm-genji
+  run_command: "mpiexec.hydra -n $cores"
+  stat: "squeue '-o %.18i %.20P %.8j %.8u %.8T %.10M %.9l %.6D %.20W %R' | grep $username "
+  cancel_job_command: "scancel $jobID"
+  corespernode: 32

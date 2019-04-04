@@ -7,6 +7,53 @@ import sys
 
 
 @task
+def install_PJM(name="", virtual_install_dir=None, venv=True, offline=True):
+    """
+    Instal a specific Application through FasbSim3, assuming localhost has internet access
+    """
+    if virtual_install_dir is not None:
+        local('echo "Installing PJM on localHost"') 
+        local('virtualenv -p python3 %s/venv' %install_dir)
+        local('. %s/venv/bin/activate && pip3 install --upgrade git+https://github.com/vecma-project/QCG-PilotJob.git && deactivate' %(install_dir))
+    else:
+        # Offline cluster installation - --user install
+        config = yaml.load(
+            open(os.path.join(env.localroot, 'deploy', 'applications.yml'))
+            )
+        info = config[name]
+        local('echo %s' %info['repository'])
+        if offline is True:
+            tmp_app_dir = "%s/tmp_app" %(env.localroot)
+            local('mkdir -p %s' %(tmp_app_dir)) 
+            #local('virtualenv -p python3 %s/venv' %tmp_app_dir)
+            #local('git -C %s clone %s' %(tmp_app_dir, info['repository']))
+            #local('zip -r %s/%s %s/%s' %(tmp_app_dir, name, tmp_app_dir, name))
+            ##for dep in info['dependencies']:
+            ##    local('pip3 download -d %s %s' %(tmp_app_dir, dep))
+            for whl in os.listdir(tmp_app_dir):
+                local(
+                    template(
+                        "rsync -pthrvz -e 'ssh -p 8522'  %s/%s $username@$remote:/home_nfs_robin_ib/bmonniern/FabSim3/results" %(tmp_app_dir, whl)
+                    )
+                )
+                
+            for dep in info['dependencies']:
+                local(
+                    template(
+                        "pip3 install --no-index --find-links=:file:/home_nfs_robin_ib/bmonniern/FabSim3/results %s" %(dep)
+                    )   
+                )
+
+
+                 #if dep.endswith('.gz'):
+                 #   local('wget %s -P %s' %(dep, tmp_app_dir))
+                 #   local(
+                 #       template(
+                 #           "rsync -pyhrvz %s/%s $username@remote:s" %(tmp_app_dir, )
+                   
+        
+
+@task
 def install_plugin(name):
     """
     Install a specific FabSim3 plugin.

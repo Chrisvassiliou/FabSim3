@@ -278,7 +278,7 @@ def fetch_results(name='', regex='', debug=False):
     else:
         local(
             template(
-                "rsync -pthrvz $username@$remote:$job_results/%s \
+                "rsync -pthrvz -e 'ssh -p $port' $username@$remote:$job_results/%s \
                 $job_results_local" % regex
                 )
             )
@@ -453,7 +453,8 @@ def job(*option_dictionaries):
         put(env.job_script, env.dest_name)
 
         # Store previous fab commands in bash history.
-        env.fabsim_command_history = get_fabsim_command_history()
+        # DEBUG Comment this line because it print too much lines
+        #env.fabsim_command_history = get_fabsim_command_history()
 
         # Make directory, copy input files and job script to results directory
         run(
@@ -572,8 +573,9 @@ def run_ensemble(config, sweep_dir, **args):
     with_config(config)
 
     sweep_length = 0  # number of runs performed in this sweep
-
+    
     for item in os.listdir(sweep_dir):
+        print(item)
         if os.path.isdir(os.path.join(sweep_dir, item)):
             sweep_length += 1
             execute(put_configs, config)
