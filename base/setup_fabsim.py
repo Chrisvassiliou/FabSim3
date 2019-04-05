@@ -7,9 +7,10 @@ import sys
 
 
 @task
-def install_PJM(name="", virtual_install_dir=None, venv=True, offline=True):
+def install_app(name="", virtual_install_dir=None, venv=True, offline=True):
     """
-    Instal a specific Application through FasbSim3, assuming localhost has internet access
+    Instal a specific Application through FasbSim3
+    
     """
     if virtual_install_dir is not None:
         local('echo "Installing PJM on localHost"') 
@@ -23,34 +24,39 @@ def install_PJM(name="", virtual_install_dir=None, venv=True, offline=True):
         info = config[name]
         local('echo %s' %info['repository'])
         if offline is True:
+            # Temporary folder 
             tmp_app_dir = "%s/tmp_app" %(env.localroot)
             local('mkdir -p %s' %(tmp_app_dir)) 
-            #local('virtualenv -p python3 %s/venv' %tmp_app_dir)
-            #local('git -C %s clone %s' %(tmp_app_dir, info['repository']))
-            #local('zip -r %s/%s %s/%s' %(tmp_app_dir, name, tmp_app_dir, name))
-            ##for dep in info['dependencies']:
-            ##    local('pip3 download -d %s %s' %(tmp_app_dir, dep))
+            
+            # Download all the dependencies of the application  
+            local('pip3 download -d %s git+https://github.com/vecma-project/QCG-PilotJob.git' %tmp_app_dir)
+            # or
+            #for dep in info['dependencies']:
+            #    local('pip3 download --platform=manylinux1_x86_64 --only-binary=:all: -d %s %s\
+            #         ||pip3 download -d %s %s' %(tmp_app_dir, dep, tmp_app_dir, dep))
+
+            # Send the dependencies (and the dependencies of dependencies) to the remote machine 
             for whl in os.listdir(tmp_app_dir):
                 local(
                     template(
                         "rsync -pthrvz -e 'ssh -p 8522'  %s/%s $username@$remote:/home_nfs_robin_ib/bmonniern/FabSim3/results" %(tmp_app_dir, whl)
                     )
                 )
-                
-            for dep in info['dependencies']:
-                local(
-                    template(
-                        "pip3 install --no-index --find-links=:file:/home_nfs_robin_ib/bmonniern/FabSim3/results %s" %(dep)
-                    )   
+            # Install all the dependencies in the remote machine
+            run(
+                template(
+                    "pip3 install --no-index --find-links=file:/home_nfs_robin_ib/bmonniern/FabSim3/results /home_nfs_robin_ib/bmonniern/FabSim3/results/QCGPilotManager-0.1.zip --user" 
                 )
-
-
-                 #if dep.endswith('.gz'):
-                 #   local('wget %s -P %s' %(dep, tmp_app_dir))
-                 #   local(
-                 #       template(
-                 #           "rsync -pyhrvz %s/%s $username@remote:s" %(tmp_app_dir, )
-                   
+            )
+            # or
+            #for dep in info['dependencies']:
+            #    run(
+            #        template(
+            #            "pip3 install --no-index --find-links=file:/home_nfs_robin_ib/bmonniern/FabSim3/results %s --user" %(dep)
+            #        )   
+            #    )
+            
+            
         
 
 @task

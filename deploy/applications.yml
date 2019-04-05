@@ -2,7 +2,7 @@ QCG-PilotJob:
     repository: https://github.com/vecma-project/QCG-PilotJob.git
     dependencies:
         - pytest
-        - zmq
+        - pyzmq
         - click
         - prompt_toolkit
         # cython 0.29.6
