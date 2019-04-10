@@ -717,3 +717,63 @@ def print_config(args=''):
     """ Prints local environment """
     for x in env:
         print(x, ':', env[x])
+
+
+@task
+def install_app(name="", external_connexion='no'):
+    """
+    Instal a specific Application through FasbSim3
+    
+    """
+
+    config = yaml.load(
+            open(os.path.join(env.localroot, 'deploy', 'applications.yml'))
+            )
+    info = config[name]
+    if external_connexion == 'yes':
+        local('echo "Installing PJM online mod"')
+        run(
+            template(
+                "pip3 install --upgrade git+%s --user"%info['repository']
+            )
+        )
+            
+    else:
+        # Offline cluster installation - --user install
+        # Temporary folder 
+        tmp_app_dir = "%s/tmp_app" %(env.localroot)
+        local('mkdir -p %s' %(tmp_app_dir))
+
+        # Download all the dependencies of the application
+        # This first method should download all the dependencies needed but for the local plateform !
+        # --> Possible Issue during the installation in the remote (it's not a cross-plateform install yet)
+        local('pip3 download -d %s git+%s' %(tmp_app_dir, info['repository']))
+        # or
+        #for dep in info['dependencies']:
+        #    local('pip3 download --platform=manylinux1_x86_64 --only-binary=:all: -d %s %s\
+        #         ||pip3 download -d %s %s' %(tmp_app_dir, dep, tmp_app_dir, dep))
+
+        # Send the dependencies (and the dependencies of dependencies) to the remote machine 
+        for whl in os.listdir(tmp_app_dir):
+            local(
+                template(
+                    "rsync -pthrvz -e 'ssh -p 8522'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
+                )
+            )
+        # Install all the dependencies in the remote machine
+        # As said before, Possible issue during the installation
+        # --> Package are downloaded for the local plateform not the remote one
+        run(
+            template(
+                "pip3 install --no-index --find-links=file:$app_repository $app_repository/QCGPilotManager-0.1.zip --user"
+            )
+        )
+        # or
+        #for dep in info['dependencies']:
+        #    run(
+        #        template(
+        #            "pip3 install --no-index --find-links=file:/home_nfs_robin_ib/bmonniern/FabSim3/results %s --user" %(dep)
+        #        )   
+        #    )
+        local('rm -rf %s' %tmp_app_dir)
+

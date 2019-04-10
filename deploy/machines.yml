@@ -305,3 +305,4 @@ genji:
   stat: "squeue '-o %.18i %.20P %.8j %.8u %.8T %.10M %.9l %.6D %.20W %R' | grep $username "
   cancel_job_command: "scancel $jobID"
   corespernode: 32
+  app_repository: "/home_nfs_robin_ib/bmonniern/VECMA/App_repo"
