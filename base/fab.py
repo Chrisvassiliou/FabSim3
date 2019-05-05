@@ -757,7 +757,7 @@ def install_app(name="", external_connexion='no'):
         for whl in os.listdir(tmp_app_dir):
             local(
                 template(
-                    "rsync -pthrvz -e 'ssh -p 8522'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
+                    "rsync -pthrvz -e 'ssh -p $port'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
                 )
             )
         # Install all the dependencies in the remote machine
@@ -765,7 +765,7 @@ def install_app(name="", external_connexion='no'):
         # --> Package are downloaded for the local plateform not the remote one
         run(
             template(
-                "pip3 install --no-index --find-links=file:$app_repository $app_repository/QCGPilotManager-0.1.zip --user"
+                "pip3 install --no-index --find-links=file:$app_repository $app_repository/%s-%s.zip --user" %(info['name'], info['version'])
             )
         )
         # or
