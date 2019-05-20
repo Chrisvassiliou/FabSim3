@@ -721,6 +721,10 @@ def print_config(args=''):
 
 
 @task
+def check_max_job_submitted(args=''):
+    """ Print the maximum number of job that can be submitted at the same time on remote machine """
+
+@task
 def install_app(name="", external_connexion='no'):
     """
     Instal a specific Application through FasbSim3
