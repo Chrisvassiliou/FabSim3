@@ -306,3 +306,4 @@ genji:
   cancel_job_command: "scancel $jobID"
   corespernode: 32
   app_repository: "/home_nfs_robin_ib/bmonniern/VECMA/App_repo"
+  job_name: "VECMA"

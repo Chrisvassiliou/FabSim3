@@ -446,7 +446,6 @@ def job(*option_dictionaries):
         calc_nodes()
         env.run_command = template(env.run_command)
         env.job_script = script_templates(env.batch_header, env.script)
-
         env.dest_name = env.pather.join(
             env.scripts_path, env.pather.basename(env.job_script)
             )
@@ -509,7 +508,9 @@ def job(*option_dictionaries):
         elif not env.get("noexec", False):
             with cd(env.job_results):
                 with prefix(env.run_prefix):
+                    print("Running sbatch")
                     run(template("$job_dispatch $dest_name"))
+                    print("sbatch done")
         print(
             "JOB OUTPUT IS STORED REMOTELY IN: %s:%s " %
             (env.remote, env.job_results)
@@ -759,21 +760,52 @@ def install_app(name="", external_connexion='no'):
                 template(
                     "rsync -pthrvz -e 'ssh -p $port'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
                 )
-            )
+           )
         # Install all the dependencies in the remote machine
         # As said before, Possible issue during the installation
         # --> Package are downloaded for the local plateform not the remote one
-        run(
-            template(
-                "pip3 install --no-index --find-links=file:$app_repository $app_repository/%s-%s.zip --user" %(info['name'], info['version'])
+
+        # Set required env variable 
+        env.config = "Install_VECMA_App"
+        env.nodes=1
+        script = os.path.join(tmp_app_dir, "script")
+
+        # Write the Install command in a file
+        with open(script, "w") as sc:
+            sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip --user" %(env.app_repository, env.app_repository, info['name'], info['version']))
+
+        # Add the tmp_app_dir directory in the local templates path because the script is saved in it
+        env.local_templates_path.insert(0, tmp_app_dir)        
+
+        ###install_dict = dict(script="script", wall_time='0:15:0')
+        env.script = "script"
+        ###update_environment(install_dict)
+
+        # Determine a generated job name from environment parameters
+        # and then define additional environment parameters based on it.
+        with_template_job()        
+        
+        # Create job script based on "sbatch header" and script created above in deploy/.jobscript/
+        env.job_script = script_templates(env.batch_header, env.script)
+
+        # Create script's destination path to remote machine based on 
+        env.dest_name = env.pather.join(
+            env.scripts_path, env.pather.basename(env.job_script)
             )
-        )
+
+        # Send Install script to remote machine 
+        put(env.job_script, env.dest_name)
+
+        # 
+        with cd(env.pather.dirname(env.job_results)):
+            run(template("%s %s") %(env.job_dispatch,env.dest_name))
+        
+
+        ##run(
+        ##    template(
+        ##        "pip3 install --no-index --find-links=file:$app_repository $app_repository/%s-%s.zip --user" %(info['name'], info['version'])
+        # #   )
+        ##)
         # or
-        #for dep in info['dependencies']:
-        #    run(
-        #        template(
-        #            "pip3 install --no-index --find-links=file:/home_nfs_robin_ib/bmonniern/FabSim3/results %s --user" %(dep)
-        #        )   
-        #    )
-        local('rm -rf %s' %tmp_app_dir)
+        ##local('rm -rf %s' %tmp_app_dir)
 
