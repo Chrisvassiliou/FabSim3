@@ -19,6 +19,10 @@ The application will be install to the '--user' path.
 
 fab genji install_app:QCG-Pilotjob
 
+An installation script will be created and stored on the remote in the following directory :
+    ~/Fabsim3/scripts
+
+
 Will install PilotJobManager on Genji supercomputer 
 
 

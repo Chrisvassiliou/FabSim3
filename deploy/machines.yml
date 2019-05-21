@@ -292,6 +292,9 @@ qcg:
   # cancel_job_command : cancel submitted task based on input $jobID 
   # the $jobID variable will be set during the execution, keep the format as '$jobID' in the parameters list
   cancel_job_command: 'qcg-cancel $jobID'
+  app_repository: "/home/plgrid/plgnmonnier/VECMA/App_repo"
+  job_name: "VECMA"
+
 
 genji:
   # This is a fake remote address 
