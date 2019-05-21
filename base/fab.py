@@ -747,25 +747,25 @@ def install_app(name="", external_connexion='no'):
         # Offline cluster installation - --user install
         # Temporary folder 
         tmp_app_dir = "%s/tmp_app" %(env.localroot)
-        ###local('mkdir -p %s' %(tmp_app_dir))
+        local('mkdir -p %s' %(tmp_app_dir))
 
         # Download all the dependencies of the application
         # This first method should download all the dependencies needed but for the local plateform !
         # --> Possible Issue during the installation in the remote (it's not a cross-plateform install yet)
-        ###local('pip3 download --no-binary=:all: -d %s git+%s' %(tmp_app_dir, info['repository']))
+        local('pip3 download --no-binary=:all: -d %s git+%s' %(tmp_app_dir, info['repository']))
         # or
         #for dep in info['dependencies']:
         #    local('pip3 download --platform=manylinux1_x86_64 --only-binary=:all: -d %s %s\
         #         ||pip3 download -d %s %s' %(tmp_app_dir, dep, tmp_app_dir, dep))
 
         # Send the dependencies (and the dependencies of dependencies) to the remote machine 
-        ###for whl in os.listdir(tmp_app_dir):
-        ###    local(
-        ###        template(
-        ###            #"rsync -pthrvz -e 'ssh -p $port'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
-        ###            "rsync -pthrvz %s/%s eagle:$app_repository"%(tmp_app_dir, whl)
-        ###        )
-        ###   )
+        for whl in os.listdir(tmp_app_dir):
+            local(
+                template(
+                    "rsync -pthrvz -e 'ssh -p $port'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
+                    #"rsync -pthrvz %s/%s eagle:$app_repository"%(tmp_app_dir, whl)
+                )
+           )
         # Install all the dependencies in the remote machine
         # As said before, Possible issue during the installation
         # --> Package are downloaded for the local plateform not the remote one
@@ -776,15 +776,15 @@ def install_app(name="", external_connexion='no'):
         script = os.path.join(tmp_app_dir, "script")
 
         # Write the Install command in a file
-        ###with open(script, "w") as sc:
-        ###    sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip --user" %(env.app_repository, env.app_repository, info['name'], info['version']))
+        with open(script, "w") as sc:
+            sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip --user" %(env.app_repository, env.app_repository, info['name'], info['version']))
 
         # Add the tmp_app_dir directory in the local templates path because the script is saved in it
         env.local_templates_path.insert(0, tmp_app_dir)        
 
-        ###install_dict = dict(script="script", wall_time='0:15:0')
-        env.script = "script"
-        ###update_environment(install_dict)
+        install_dict = dict(script="script", wall_time='0:15:0')
+        #env.script = "script"
+        update_environment(install_dict)
 
         # Determine a generated job name from environment parameters
         # and then define additional environment parameters based on it.
@@ -799,11 +799,11 @@ def install_app(name="", external_connexion='no'):
             )
 
         # Send Install script to remote machine 
-        ###put(env.job_script, env.dest_name)
+        put(env.job_script, env.dest_name)
 
         # 
-        ###with cd(env.pather.dirname(env.job_results)):
-        run(template("%s %s") %(env.job_dispatch,env.dest_name))
+        with cd(env.pather.dirname(env.job_results)):
+            run(template("%s %s") %(env.job_dispatch,env.dest_name))
         
 
         ##run(
@@ -812,5 +812,5 @@ def install_app(name="", external_connexion='no'):
         # #   )
         ##)
         # or
-        ##local('rm -rf %s' %tmp_app_dir)
+        local('rm -rf %s' %tmp_app_dir)
 
