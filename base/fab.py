@@ -735,6 +735,8 @@ def install_app(name="", external_connexion='no'):
             open(os.path.join(env.localroot, 'deploy', 'applications.yml'))
             )
     info = config[name]
+
+    # standby here 
     if external_connexion == 'yes':
         local('echo "Installing PJM online mod"')
         run(
@@ -753,11 +755,13 @@ def install_app(name="", external_connexion='no'):
         # This first method should download all the dependencies needed but for the local plateform !
         # --> Possible Issue during the installation in the remote (it's not a cross-plateform install yet)
         local('pip3 download --no-binary=:all: -d %s git+%s' %(tmp_app_dir, info['repository']))
-        # or
-        #for dep in info['dependencies']:
-        #    local('pip3 download --platform=manylinux1_x86_64 --only-binary=:all: -d %s %s\
-        #         ||pip3 download -d %s %s' %(tmp_app_dir, dep, tmp_app_dir, dep))
 
+        # Create  directory in the remote machine to store dependency packages
+        run(
+            template(
+                "mkdir -p %s" %env.app_repository
+            )
+        )
         # Send the dependencies (and the dependencies of dependencies) to the remote machine 
         for whl in os.listdir(tmp_app_dir):
             local(
@@ -766,9 +770,6 @@ def install_app(name="", external_connexion='no'):
                     #"rsync -pthrvz %s/%s eagle:$app_repository"%(tmp_app_dir, whl)
                 )
            )
-        # Install all the dependencies in the remote machine
-        # As said before, Possible issue during the installation
-        # --> Package are downloaded for the local plateform not the remote one
 
         # Set required env variable 
         env.config = "Install_VECMA_App"
@@ -778,10 +779,9 @@ def install_app(name="", external_connexion='no'):
         # Write the Install command in a file
         with open(script, "w") as sc:
             sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip --user" %(env.app_repository, env.app_repository, info['name'], info['version']))
-
         # Add the tmp_app_dir directory in the local templates path because the script is saved in it
         env.local_templates_path.insert(0, tmp_app_dir)        
-
+        
         install_dict = dict(script="script", wall_time='0:15:0')
         #env.script = "script"
         update_environment(install_dict)
@@ -797,20 +797,13 @@ def install_app(name="", external_connexion='no'):
         env.dest_name = env.pather.join(
             env.scripts_path, env.pather.basename(env.job_script)
             )
-
         # Send Install script to remote machine 
         put(env.job_script, env.dest_name)
-
-        # 
+        #
+        run(template("mkdir -p $job_results")) 
         with cd(env.pather.dirname(env.job_results)):
             run(template("%s %s") %(env.job_dispatch,env.dest_name))
         
 
-        ##run(
-        ##    template(
-        ##        "pip3 install --no-index --find-links=file:$app_repository $app_repository/%s-%s.zip --user" %(info['name'], info['version'])
-        # #   )
-        ##)
-        # or
         local('rm -rf %s' %tmp_app_dir)
 

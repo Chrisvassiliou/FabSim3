@@ -17,7 +17,7 @@ The application will be install to the '--user' path.
 
 ## Examples 
 
-fab genji install_app:QCG-Pilotjob
+fab genji install_app:QCG-PilotJob
 
 An installation script will be created and stored on the remote in the following directory :
     ~/Fabsim3/scripts
