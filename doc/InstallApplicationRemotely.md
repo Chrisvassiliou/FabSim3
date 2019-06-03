@@ -13,11 +13,18 @@ All the information about the application has to be define in deploy/application
 >	version: 0.1	# last release version
 
 
-The application will be install to the '--user' path.
+The application will be install to the '--user' path by default.
+
+You can also choose to use a virtualenvironment to install your application.
+Variable `virtual_env_path` in machine.yml set the path to the virtual environment, if it does not exist, the virtual env is created.
+To specify this option, you must set `virtual_env=True` in the fabsim command.
+
 
 ## Examples 
 
 fab genji install_app:QCG-PilotJob
+
+fab qcg install_app:QCG-PilotJob,virtual_env=True
 
 An installation script will be created and stored on the remote in the following directory :
     ~/Fabsim3/scripts

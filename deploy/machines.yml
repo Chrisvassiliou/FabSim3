@@ -58,6 +58,9 @@ default:
   local_python_path: ["$localroot/python"]
   # This variable encodes the default location for config_files.
   local_config_file_path: ["$localroot/config_files"]
+  
+  # This variable set the path to the virtual environement choose by the user
+  virtual_env_path: "$home_path/MyVirtualEnv"
 
 
 cartesius:
@@ -310,3 +313,4 @@ genji:
   corespernode: 32
   app_repository: "/home_nfs_robin_ib/bmonniern/VECMA/App_repo"
   job_name: "VECMA"
+  virtual_env_path: "$home_path/MyVirtualEnv"

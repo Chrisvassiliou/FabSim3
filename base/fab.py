@@ -725,7 +725,7 @@ def check_max_job_submitted(args=''):
     """ Print the maximum number of job that can be submitted at the same time on remote machine """
 
 @task
-def install_app(name="", external_connexion='no'):
+def install_app(name="", external_connexion='no',virtual_env='False'):
     """
     Instal a specific Application through FasbSim3
     
@@ -736,74 +736,69 @@ def install_app(name="", external_connexion='no'):
             )
     info = config[name]
 
-    # standby here 
-    if external_connexion == 'yes':
-        local('echo "Installing PJM online mod"')
-        run(
-            template(
-                "pip3 install --upgrade git+%s --user"%info['repository']
-            )
+    # Offline cluster installation - --user install
+    # Temporary folder 
+    tmp_app_dir = "%s/tmp_app" %(env.localroot)
+    local('mkdir -p %s' %(tmp_app_dir))
+
+    # Download all the dependencies of the application
+    # This first method should download all the dependencies needed but for the local plateform !
+    # --> Possible Issue during the installation in the remote (it's not a cross-plateform install yet)
+    local('pip3 download --no-binary=:all: -d %s git+%s' %(tmp_app_dir, info['repository']))
+
+    # Create  directory in the remote machine to store dependency packages
+    run(
+        template(
+            "mkdir -p %s" %env.app_repository
         )
-            
-    else:
-        # Offline cluster installation - --user install
-        # Temporary folder 
-        tmp_app_dir = "%s/tmp_app" %(env.localroot)
-        local('mkdir -p %s' %(tmp_app_dir))
-
-        # Download all the dependencies of the application
-        # This first method should download all the dependencies needed but for the local plateform !
-        # --> Possible Issue during the installation in the remote (it's not a cross-plateform install yet)
-        local('pip3 download --no-binary=:all: -d %s git+%s' %(tmp_app_dir, info['repository']))
-
-        # Create  directory in the remote machine to store dependency packages
-        run(
+    )
+    # Send the dependencies (and the dependencies of dependencies) to the remote machine 
+    for whl in os.listdir(tmp_app_dir):
+        local(
             template(
-                "mkdir -p %s" %env.app_repository
+                "rsync -pthrvz -e 'ssh -p $port'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
+                #"rsync -pthrvz %s/%s eagle:$app_repository"%(tmp_app_dir, whl)
             )
+       )
+
+    # Set required env variable 
+    env.config = "Install_VECMA_App"
+    env.nodes=1
+    script = os.path.join(tmp_app_dir, "script")
+    # Write the Install command in a file
+    with open(script, "w") as sc:
+        install_dir = "--user"
+        if virtual_env == 'True':
+            sc.write("if [ ! -d %s ]; then \n\tvirtualenv -p python3 --no-download %s\nfi\n\nsource %s/bin/activate\n" %(env.virtual_env_path, env.virtual_env_path, env.virtual_env_path))
+            install_dir = ""
+
+        sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip %s" %(env.app_repository, env.app_repository, info['name'], info['version'], install_dir))
+
+    # Add the tmp_app_dir directory in the local templates path because the script is saved in it
+    env.local_templates_path.insert(0, tmp_app_dir)
+    
+    install_dict = dict(script="script", wall_time='0:15:0')
+    #env.script = "script"
+    update_environment(install_dict)
+
+    # Determine a generated job name from environment parameters
+    # and then define additional environment parameters based on it.
+    with_template_job() 
+    
+    # Create job script based on "sbatch header" and script created above in deploy/.jobscript/
+    env.job_script = script_templates(env.batch_header, env.script)
+
+    # Create script's destination path to remote machine based on 
+    env.dest_name = env.pather.join(
+        env.scripts_path, env.pather.basename(env.job_script)
         )
-        # Send the dependencies (and the dependencies of dependencies) to the remote machine 
-        for whl in os.listdir(tmp_app_dir):
-            local(
-                template(
-                    "rsync -pthrvz -e 'ssh -p $port'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
-                    #"rsync -pthrvz %s/%s eagle:$app_repository"%(tmp_app_dir, whl)
-                )
-           )
+    # Send Install script to remote machine 
+    put(env.job_script, env.dest_name)
+    #
+    run(template("mkdir -p $job_results"))
+    with cd(env.pather.dirname(env.job_results)):
+        run(template("%s %s") %(env.job_dispatch, env.dest_name))
+    
 
-        # Set required env variable 
-        env.config = "Install_VECMA_App"
-        env.nodes=1
-        script = os.path.join(tmp_app_dir, "script")
-
-        # Write the Install command in a file
-        with open(script, "w") as sc:
-            sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip --user" %(env.app_repository, env.app_repository, info['name'], info['version']))
-        # Add the tmp_app_dir directory in the local templates path because the script is saved in it
-        env.local_templates_path.insert(0, tmp_app_dir)        
-        
-        install_dict = dict(script="script", wall_time='0:15:0')
-        #env.script = "script"
-        update_environment(install_dict)
-
-        # Determine a generated job name from environment parameters
-        # and then define additional environment parameters based on it.
-        with_template_job()        
-        
-        # Create job script based on "sbatch header" and script created above in deploy/.jobscript/
-        env.job_script = script_templates(env.batch_header, env.script)
-
-        # Create script's destination path to remote machine based on 
-        env.dest_name = env.pather.join(
-            env.scripts_path, env.pather.basename(env.job_script)
-            )
-        # Send Install script to remote machine 
-        put(env.job_script, env.dest_name)
-        #
-        run(template("mkdir -p $job_results")) 
-        with cd(env.pather.dirname(env.job_results)):
-            run(template("%s %s") %(env.job_dispatch,env.dest_name))
-        
-
-        local('rm -rf %s' %tmp_app_dir)
+    local('rm -rf %s' %tmp_app_dir)
 
