@@ -5,7 +5,6 @@ from fabric.contrib.project import *
 import fileinput
 import sys
 
-        
 
 @task
 def install_plugin(name):
