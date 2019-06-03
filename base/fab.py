@@ -102,7 +102,7 @@ def find_config_file_path(name, ExceptWhenNotFound=True):
             raise Exception(
                 "Error: config file directory not found in: ",
                 env.local_config_file_path
-                )
+            )
         else:
             return False
     return path_used
@@ -126,7 +126,7 @@ def with_config(name):
     env.job_config_contents = env.pather.join(env.job_config_path, '*')
     env.job_config_contents_local = os.path.join(
         env.job_config_path_local, '*'
-        )
+    )
     # name of the job sh submission script.
     env.job_name_template_sh = template("%s.sh" % env.job_name_template)
 
@@ -145,16 +145,16 @@ def with_profile(name):
     env.profile = name
     env.job_profile_path = env.pather.join(
         env.profiles_path, name
-        )
+    )
     env.job_profile_path_local = os.path.join(
         env.local_profiles, name
-        )
+    )
     env.job_profile_contents = env.pather.join(
         env.job_profile_path, '*'
-        )
+    )
     env.job_profile_contents_local = os.path.join(
         env.job_profile_path_local, '*'
-        )
+    )
 
 
 @task
@@ -179,15 +179,15 @@ def fetch_configs(config=''):
                 "globus-url-copy -cd -r -sync \
                 gsiftp://$remote/$job_config_path/ \
                 file://$job_config_path_local/"
-                )
             )
+        )
     else:
         local(
             template(
                 "rsync -pthrvz $username@$remote:$job_config_path/ \
                 $job_config_path_local"
-                )
             )
+        )
 
 
 @task
@@ -211,21 +211,21 @@ def put_configs(config=''):
     run(
         template(
             "%s; mkdir -p $job_config_path" % (get_setup_fabsim_dirs_string())
-            )
         )
+    )
     if env.manual_gsissh:
         local(
             template(
                 "globus-url-copy -p 10 -cd -r -sync \
                 file://$job_config_path_local/ \
                 gsiftp://$remote/$job_config_path/"
-                )
             )
+        )
     else:
         rsync_project(
             local_dir=env.job_config_path_local + '/',
             remote_dir=env.job_config_path
-            )
+        )
 
 
 @task
@@ -250,7 +250,7 @@ def put_results(name=''):
         rsync_project(
             local_dir=env.job_results_local + '/',
             remote_dir=env.job_results
-            )
+        )
 
 
 @task
@@ -273,15 +273,15 @@ def fetch_results(name='', regex='', debug=False):
                 "globus-url-copy -cd -r -sync \
                 gsiftp://$remote/$job_results/%s \
                 file://$job_results_local/" % regex
-                )
             )
+        )
     else:
         local(
             template(
-                "rsync -pthrvz -e 'ssh -p $port' $username@$remote:$job_results/%s \
-                $job_results_local" % regex
-                )
+                "rsync -pthrvz -e 'ssh -p $port' $username@$remote: \
+                $job_results/%s $job_results_local" % regex
             )
+        )
 
 
 @task
@@ -308,15 +308,15 @@ def fetch_profiles(name=''):
                 "globus-url-copy -cd -r -sync \
                 gsiftp://$remote/$job_profile_path/ \
                 file://$job_profile_path_local/"
-                )
             )
+        )
     else:
         local(
             template(
                 "rsync -pthrvz $username@$remote:$job_profile_path/ \
                 $job_profile_path_local"
-                )
             )
+        )
 
 
 @task
@@ -336,12 +336,12 @@ def put_profiles(name=''):
             template("globus-url-copy -p 10 -cd -r -sync \
             file://$job_profile_path_local/ \
             gsiftp://$remote/$job_profile_path/")
-            )
+        )
     else:
         rsync_project(
             local_dir=env.job_profile_path_local + '/',
             remote_dir=env.job_profile_path
-            )
+        )
 
     """
     Returns the commands required to set up the fabric directories. This
@@ -352,7 +352,7 @@ def put_profiles(name=''):
     """
     return(
         'mkdir -p $config_path; mkdir -p $results_path; mkdir -p $scripts_path'
-        )
+    )
 
     """
     Sets up directories required for the use of FabSim.
@@ -391,7 +391,7 @@ def get_fabsim_command_history():
     """
     return local_with_stdout(
         "cat %s/.bash_history | grep fab" % (env.localhome), verbose=True
-        )
+    )
 
 
 def removekey(d, key):
@@ -424,7 +424,7 @@ def job(*option_dictionaries):
         env.cores_reserved = (
             (1 + (int(env.cores) - 1) / int(env.corespernode)) *
             env.corespernode
-            )
+        )
     # If cores_reserved is not specified, temporarily set it based on the
     # same as the number of cores
     # Needs to be temporary if there's another job with a different number
@@ -438,7 +438,7 @@ def job(*option_dictionaries):
         if env.node_type:
             env.node_type_restriction = template(
                 env.node_type_restriction_template
-                )
+            )
         env['job_name'] = env.name[0:env.max_job_name_chars]
         with settings(cores=1):
             calc_nodes()
@@ -448,12 +448,12 @@ def job(*option_dictionaries):
         env.job_script = script_templates(env.batch_header, env.script)
         env.dest_name = env.pather.join(
             env.scripts_path, env.pather.basename(env.job_script)
-            )
+        )
         put(env.job_script, env.dest_name)
 
         # Store previous fab commands in bash history.
         # DEBUG Comment this line because it print too much lines
-        #env.fabsim_command_history = get_fabsim_command_history()
+        # env.fabsim_command_history = get_fabsim_command_history()
 
         # Make directory, copy input files and job script to results directory
         run(
@@ -461,8 +461,8 @@ def job(*option_dictionaries):
                 "mkdir -p $job_results && rsync -av --progress \
                 $job_config_path/* $job_results/ --exclude SWEEP && \
                 cp $dest_name $job_results"
-                )
             )
+        )
 
         # In ensemble mode, also add run-specific file to the results dir.
         if env.ensemble_mode:
@@ -470,8 +470,8 @@ def job(*option_dictionaries):
                 template(
                     "cp -r \
                     $job_config_path/SWEEP/$label/* $job_results/"
-                    )
                 )
+            )
 
         try:
             del env["passwords"]
@@ -485,7 +485,7 @@ def job(*option_dictionaries):
         with tempfile.NamedTemporaryFile(mode='r+') as tempf:
             tempf.write(
                 yaml.dump(dict(env))
-                )
+            )
             tempf.flush()  # Flush the file before we copy it.
             put(tempf.name, env.pather.join(env.job_results, 'env.yml'))
         run(template("chmod u+x $dest_name"))
@@ -514,12 +514,12 @@ def job(*option_dictionaries):
         print(
             "JOB OUTPUT IS STORED REMOTELY IN: %s:%s " %
             (env.remote, env.job_results)
-            )
+        )
         print(
             "Use `fab %s fetch_results` to copy the results back to %s on\
             localhost." %
             (env.machine_name, env.job_results_local)
-            )
+        )
     if env.get("dumpenv", False) == "True":
         print("DUMPENV mode enabled. Dumping environment:")
         print(env)
@@ -574,19 +574,19 @@ def run_ensemble(config, sweep_dir, **args):
     with_config(config)
 
     sweep_length = 0  # number of runs performed in this sweep
-    
+
     for item in os.listdir(sweep_dir):
         print(item)
         if os.path.isdir(os.path.join(sweep_dir, item)):
             sweep_length += 1
             execute(put_configs, config)
             job(dict(wall_time='0:15:0', memory='2G', ensemble_mode=True,
-                label=item), args)
+                     label=item), args)
     if sweep_length == 0:
         print(
             "ERROR: no files where found in the sweep_dir of this\
             run_ensemble command."
-            )
+        )
         print("Sweep dir location: %s" % (sweep_dir))
 
 
@@ -660,8 +660,8 @@ def put(src, dest):
             template(
                 "globus-url-copy -sync -r -cd -p 10\
                 file://$manual_src gsiftp://$host/$manual_dest"
-                )
             )
+        )
     elif env.manual_ssh:
         env.manual_src = src
         env.manual_dest = dest
@@ -682,7 +682,7 @@ def blackbox(script='ibi.sh', args=''):
         "FabSim Error: could not find blackbox() script file.\
         FabSim looked for it in the following directories: ",
         env.local_blackbox_path
-        )
+    )
 
 
 @task
@@ -705,12 +705,12 @@ def archive(prefix, archive_location):
     print(
         "REMOTE MOVE: mv %s/%s %s/Backup" % (
             env.results_path, prefix, parent_path
-            )
         )
+    )
     run("mkdir -p %s/Backup" % (parent_path))
     run(
         "mv -i %s/%s* %s/Backup/" % (env.results_path, prefix, parent_path)
-        )
+    )
 
 
 @task
@@ -722,83 +722,97 @@ def print_config(args=''):
 
 @task
 def check_max_job_submitted(args=''):
-    """ Print the maximum number of job that can be submitted at the same time on remote machine """
+    """
+    Print the maximum number of job that can be submitted
+    at the same time on remote machine
+    """
+
 
 @task
-def install_app(name="", external_connexion='no',virtual_env='False'):
+def install_app(name="", external_connexion='no', virtual_env='False'):
     """
     Instal a specific Application through FasbSim3
-    
+
     """
 
     config = yaml.load(
-            open(os.path.join(env.localroot, 'deploy', 'applications.yml'))
-            )
+        open(os.path.join(env.localroot, 'deploy', 'applications.yml'))
+    )
     info = config[name]
 
     # Offline cluster installation - --user install
-    # Temporary folder 
-    tmp_app_dir = "%s/tmp_app" %(env.localroot)
-    local('mkdir -p %s' %(tmp_app_dir))
+    # Temporary folder
+    tmp_app_dir = "%s/tmp_app" % (env.localroot)
+    local('mkdir -p %s' % (tmp_app_dir))
 
     # Download all the dependencies of the application
-    # This first method should download all the dependencies needed but for the local plateform !
-    # --> Possible Issue during the installation in the remote (it's not a cross-plateform install yet)
-    local('pip3 download --no-binary=:all: -d %s git+%s' %(tmp_app_dir, info['repository']))
+    # This first method should download all the dependencies needed
+    # but for the local plateform !
+    # --> Possible Issue during the installation in the remote
+    # (it's not a cross-plateform install yet)
+    local('pip3 download --no-binary=:all: -d %s git+%s' %
+          (tmp_app_dir, info['repository']))
 
-    # Create  directory in the remote machine to store dependency packages
+    # Create  directory in the remote machine to store dependency packages
     run(
         template(
-            "mkdir -p %s" %env.app_repository
+            "mkdir -p %s" % env.app_repository
         )
     )
-    # Send the dependencies (and the dependencies of dependencies) to the remote machine 
+    # Send the dependencies (and the dependencies of dependencies) to the
+    # remote machine
     for whl in os.listdir(tmp_app_dir):
         local(
             template(
-                "rsync -pthrvz -e 'ssh -p $port'  %s/%s $username@$remote:$app_repository" %(tmp_app_dir, whl)
-                #"rsync -pthrvz %s/%s eagle:$app_repository"%(tmp_app_dir, whl)
+                "rsync -pthrvz -e 'ssh -p $port'  %s/%s \
+                $username@$remote:$app_repository" % (tmp_app_dir, whl)
             )
-       )
+            # "rsync -pthrvz %s/%s eagle:$app_repository"%(tmp_app_dir, whl)
+        )
 
-    # Set required env variable 
+    # Set required env variable
     env.config = "Install_VECMA_App"
-    env.nodes=1
+    env.nodes = 1
     script = os.path.join(tmp_app_dir, "script")
-    # Write the Install command in a file
+    # Write the Install command in a file
     with open(script, "w") as sc:
         install_dir = "--user"
         if virtual_env == 'True':
-            sc.write("if [ ! -d %s ]; then \n\tvirtualenv -p python3 --no-download %s\nfi\n\nsource %s/bin/activate\n" %(env.virtual_env_path, env.virtual_env_path, env.virtual_env_path))
+            sc.write("if [ ! -d %s ]; then \n\tvirtualenv -p python3 \
+                    --no-download %s\nfi\n\nsource %s/bin/activate\n" %
+                     (env.virtual_env_path, env.virtual_env_path,
+                      env.virtual_env_path))
             install_dir = ""
 
-        sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip %s" %(env.app_repository, env.app_repository, info['name'], info['version'], install_dir))
+        sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip %s"
+                 % (env.app_repository, env.app_repository,
+                    info['name'], info['version'], install_dir))
 
-    # Add the tmp_app_dir directory in the local templates path because the script is saved in it
+    # Add the tmp_app_dir directory in the local templates path because the
+    # script is saved in it
     env.local_templates_path.insert(0, tmp_app_dir)
-    
+
     install_dict = dict(script="script", wall_time='0:15:0')
-    #env.script = "script"
+    # env.script = "script"
     update_environment(install_dict)
 
-    # Determine a generated job name from environment parameters
-    # and then define additional environment parameters based on it.
-    with_template_job() 
-    
-    # Create job script based on "sbatch header" and script created above in deploy/.jobscript/
+    # Determine a generated job name from environment parameters
+    # and then define additional environment parameters based on it.
+    with_template_job()
+
+    # Create job script based on "sbatch header" and script created above in
+    # deploy/.jobscript/
     env.job_script = script_templates(env.batch_header, env.script)
 
-    # Create script's destination path to remote machine based on 
+    # Create script's destination path to remote machine based on
     env.dest_name = env.pather.join(
         env.scripts_path, env.pather.basename(env.job_script)
-        )
-    # Send Install script to remote machine 
+    )
+    # Send Install script to remote machine
     put(env.job_script, env.dest_name)
     #
     run(template("mkdir -p $job_results"))
     with cd(env.pather.dirname(env.job_results)):
-        run(template("%s %s") %(env.job_dispatch, env.dest_name))
-    
+        run(template("%s %s") % (env.job_dispatch, env.dest_name))
 
-    local('rm -rf %s' %tmp_app_dir)
-
+    local('rm -rf %s' % tmp_app_dir)
