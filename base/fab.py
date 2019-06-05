@@ -778,13 +778,23 @@ def install_app(name="", external_connexion='no', virtual_env='False'):
     with open(script, "w") as sc:
         install_dir = "--user"
         if virtual_env == 'True':
+            # It seems some version of python/virtualenv doesn't support
+            # the option --no-download. So there is sometime a problem :
+            # from pip import main
+            # ImportError: cannot import name 'main'
+            #
+            # TODO Check python version and raised a Warning if not the
+            # right version ?
+            # TODO
             sc.write("if [ ! -d %s ]; then \n\tvirtualenv -p python3 \
-                    --no-download %s\nfi\n\nsource %s/bin/activate\n" %
+                    %s || echo 'WARNING : virtualenv is not installed \
+                    or has a problem' \nfi\n\nsource %s/bin/activate\n" %
                      (env.virtual_env_path, env.virtual_env_path,
                       env.virtual_env_path))
             install_dir = ""
 
-        sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip %s"
+        sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip %s \
+                || pip3 install --no-index --find-links=file:%s %s/%s-%s.zip"
                  % (env.app_repository, env.app_repository,
                     info['name'], info['version'], install_dir))
 
