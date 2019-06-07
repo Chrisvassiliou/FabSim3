@@ -2,7 +2,7 @@
 
 #SBATCH --job-name=$job_name
 #SBATCH --nodes $nodes
-#SBATCH -p SKL-20c_edr-ib2_192gb_2666
+#SBATCH -p SKL-16c_edr-ib1_192gb_2666
 #SBATCH --output="job.out"
 #SBATCH --error="job.err"
 #SBATCH --exclusive

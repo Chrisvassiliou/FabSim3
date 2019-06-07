@@ -11,7 +11,9 @@ All the information about the application has to be define in deploy/application
 >	repository: https://github.com/vecma-project/QCG-PilotJob.git   # github repository
 >	name : QCGPilotManager  # Name of the downloaded zip with pip  
 >	version: 0.1	# last release version
-
+>   additional_dependencies:   # Additional package you'd like to install 
+>        - numpy
+>        - pandas 
 
 The application will be install to the '--user' path by default.
 

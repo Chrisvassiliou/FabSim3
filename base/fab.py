@@ -24,6 +24,8 @@ import os.path
 import subprocess
 import math
 from pprint import PrettyPrinter
+from pathlib import Path
+
 pp = PrettyPrinter()
 
 
@@ -745,6 +747,15 @@ def install_app(name="", external_connexion='no', virtual_env='False'):
     tmp_app_dir = "%s/tmp_app" % (env.localroot)
     local('mkdir -p %s' % (tmp_app_dir))
 
+    # First download all the additional dependencies
+    for dep in info['additional_dependencies']:
+        local('pip3 download --no-binary=:all: -d %s %s' % (tmp_app_dir, dep))
+    add_dep_list_compressed = sorted(Path(tmp_app_dir).iterdir(),
+                                     key=lambda f: f.stat().st_mtime)
+    for it in range(len(add_dep_list_compressed)):
+        add_dep_list_compressed[it] = os.path.basename(
+                            add_dep_list_compressed[it])
+
     # Download all the dependencies of the application
     # This first method should download all the dependencies needed
     # but for the local plateform !
@@ -793,10 +804,28 @@ def install_app(name="", external_connexion='no', virtual_env='False'):
                       env.virtual_env_path))
             install_dir = ""
 
+        # First install the additional_dependencies
+        for dep in reversed(add_dep_list_compressed):
+            print(dep)
+            if dep.endswith('.zip'):
+                sc.write("\nunzip %s/%s -d %s && cd %s/%s \
+                        && python3 setup.py install %s"
+                         % (env.app_repository, dep, env.app_repository,
+                            env.app_repository, dep.replace(".zip", ""),
+                            install_dir))
+            elif dep.endswith('.tar.gz'):
+                sc.write("\ntar xf %s/%s -C %s && cd %s/%s \
+                        && python3 setup.py install %s\n"
+                         % (env.app_repository, dep, env.app_repository,
+                            env.app_repository, dep.replace(".tar.gz", ""),
+                            install_dir))
+
         sc.write("pip3 install --no-index --find-links=file:%s %s/%s-%s.zip %s \
                 || pip3 install --no-index --find-links=file:%s %s/%s-%s.zip"
                  % (env.app_repository, env.app_repository,
-                    info['name'], info['version'], install_dir))
+                    info['name'], info['version'],
+                    install_dir, env.app_repository,
+                    env.app_repository, info['name'], info['version']))
 
     # Add the tmp_app_dir directory in the local templates path because the
     # script is saved in it
