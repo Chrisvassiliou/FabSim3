@@ -12,6 +12,7 @@ matrix:
         - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
         - chmod og-wx ~/.ssh/authorized_keys
         - ssh-keyscan -H localhost >> ~/.ssh/known_hosts
+        - git clone https://github.com/djgroen/flee-release.git ~/Codes/flee-release
         - fab localhost install_plugin:FabDummy
       script:
         - python -m pytest -s --log-cli-level=10 tests/
