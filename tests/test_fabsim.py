@@ -31,6 +31,9 @@ def test_fabflee_install():
         ["fab", "localhost", "install_plugin:FabFlee"]) == 0)
 
 def test_flee_mali_without_manual_ssh():
+    assert(subprocess.call(["pip", "install", "numpy"]) == 0)
+    output = assert(subprocess.call(["pip", "install", "numpy"]) == 0).decode("utf-8")
+    
     assert(subprocess.call(
         ["fab", "localhost", "flee:mali,simulation_period=50,manual_ssh=false"]) == 0)
     output = subprocess.check_output(
