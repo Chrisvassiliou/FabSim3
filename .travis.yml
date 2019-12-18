@@ -15,9 +15,9 @@ matrix:
         - ssh-keyscan -H localhost >> ~/.ssh/known_hosts
         - git clone https://github.com/djgroen/flee-release.git ~/Codes/flee-release
         - fab localhost install_plugin:FabDummy
-      script:
         - ssh -Y -p 22 travis@localhost 'python3 -m pip install numpy'
         - ssh -Y -p 22 travis@localhost 'pip freeze'        
+      script:    
         - python -m pytest -s --log-cli-level=10 tests/
         - py.test --pep8 base/ --ignore=E501
 
