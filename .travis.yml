@@ -5,7 +5,6 @@ matrix:
       python:
         - "3.6"
       install:
-        - ln -s /usr/bin/python3 /usr/local/bin/python
         - pip3 install --upgrade pip
         - pip install -U pip setuptools
         - pip install pyyaml numpy fabric3 cryptography==2.4.2
