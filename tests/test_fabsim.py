@@ -26,10 +26,17 @@ def test_fabdummy_install():
     assert(subprocess.call(
         ["fab", "localhost", "install_plugin:FabDummy"]) == 0)
 
-def test_run_fabdummy_job():    
+def test_fabflee_install():
     assert(subprocess.call(
-        ["fab", "localhost", "dummy:dummy_test"]) == 0)
+        ["fab", "localhost", "install_plugin:FabFlee"]) == 0)
 
+def test_flee_mali_without_manual_ssh():
+    assert(subprocess.call(
+        ["fab", "localhost", "flee:mali,simulation_period=50,manual_ssh=false"]) == 0)
+    output = subprocess.check_output(
+        ["fab", "localhost", "flee:mali,simulation_period=50,manual_ssh=false"]).decode("utf-8")
+    assert(output.find('success') >= 0)
+      
 def test_fabsim_password_bugfix():
     """
     GitHub Issue #56
