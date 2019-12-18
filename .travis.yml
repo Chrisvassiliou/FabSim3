@@ -20,7 +20,7 @@ matrix:
         - ssh -Y -p 22 travis@localhost 'python --version'
         - ssh -Y -p 22 travis@localhost 'pip --version'
         - ssh -Y -p 22 travis@localhost 'python3 --version'
-        - ssh -Y -p 22 travis@localhost 'pip3 --version'
+
         - ssh -Y -p 22 travis@localhost 'pip install --user numpy'
         - ssh -Y -p 22 travis@localhost 'pip freeze'        
       script:    
