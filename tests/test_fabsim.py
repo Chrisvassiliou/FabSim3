@@ -31,13 +31,10 @@ def test_fabflee_install():
         ["fab", "localhost", "install_plugin:FabFlee"]) == 0)
 
 def test_flee_mali_without_manual_ssh():
-    assert(subprocess.call(["pip", "install", "numpy"]) == 0)
-    output = subprocess.check_output(["pip", "install", "numpy"]).decode("utf-8")
-    
     assert(subprocess.call(
-        ["fab", "localhost", "flee:mali,simulation_period=50,manual_ssh=false"]) == 0)
+        ["fab", "localhost", "flee:mali,simulation_period=50,manual_ssh=true"]) == 0)
     output = subprocess.check_output(
-        ["fab", "localhost", "flee:mali,simulation_period=50,manual_ssh=false"]).decode("utf-8")
+        ["fab", "localhost", "flee:mali,simulation_period=50,manual_ssh=true"]).decode("utf-8")
     assert(output.find('success') >= 0)
       
 def test_fabsim_password_bugfix():
