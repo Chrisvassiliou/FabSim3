@@ -26,6 +26,9 @@ def test_fabdummy_install():
     assert(subprocess.call(
         ["fab", "localhost", "install_plugin:FabDummy"]) == 0)
 
+def test_run_fabdummy_job():    
+    assert(subprocess.call(
+        ["fab", "localhost", "dummy:dummy_test"]) == 0)
 
 def test_fabsim_password_bugfix():
     """
