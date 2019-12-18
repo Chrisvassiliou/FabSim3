@@ -16,7 +16,8 @@ matrix:
         - git clone https://github.com/djgroen/flee-release.git ~/Codes/flee-release
         - fab localhost install_plugin:FabDummy
       script:
-        - ssh -Y -p 22 travis@localhost 'pip freeze'
+        - ssh -Y -p 22 travis@localhost 'pip install numpy'
+        - ssh -Y -p 22 travis@localhost 'pip freeze'        
         - python -m pytest -s --log-cli-level=10 tests/
         - py.test --pep8 base/ --ignore=E501
 
