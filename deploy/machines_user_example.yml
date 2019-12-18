@@ -6,6 +6,7 @@ default:
   local_results: "~/Codes/FabSim/results"
   local_configs: "~/Codes/FabSim/config_files"
   username: "your-username"
+  flee_location : "~/Codes/flee-release"
   # home_path_template: "/home/$username"
   # home_path_template: "/Users/$username"  # for OSX users
   # Allows to switch between SSH (default) and GSISSH login.
